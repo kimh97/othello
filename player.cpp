@@ -1,23 +1,19 @@
 #include "player.hpp"
 
+int heuristic[8][8] = {{100, -50, 50, 50, 50, 50, -50, 100},
+                         {-50, -100, 0, 0, 0, 0, -100, -50},
+                         {50, 0, 0, 0, 0, 0, 0, 50},
+                         {50, 0, 0, 0, 0, 0, 0, 50},
+                         {50, 0, 0, 0, 0, 0, 0, 50},
+                         {50, 0, 0, 0, 0, 0, 0, 50},
+                         {-50, -100, 0, 0, 0, 0, -100, -50},
+                         {100, -50, 50, 50, 50, 50, -50, 100}};
+
 /*
  * Constructor for the player; initialize everything here. The side your AI is
  * on (BLACK or WHITE) is passed in as "side". The constructor must finish
  * within 30 seconds.
  */
-
-int heuristic[8][8] = {{100, -50, 50, 50, 50, 50, -50, 100},
-                        {-50, -100, 0, 0, 0, 0, -100, -50},
-                        {50, 0, 0, 0, 0, 0, 0, 50},
-                        {50, 0, 0, 0, 0, 0, 0, 50},
-                        {50, 0, 0, 0, 0, 0, 0, 50},
-                        {50, 0, 0, 0, 0, 0, 0, 50},
-                        {-50, -100, 0, 0, 0, 0, -100, -50},
-                        {100, -50, 50, 50, 50, 50, -50, 100}};
-
-
-
-
 Player::Player(Side side) {
     // Will be set to true in test_minimax.cpp.
     testingMinimax = false;
@@ -69,6 +65,10 @@ Move *Player::doMove(Move *opponentsMove, int msLeft) {
      */
     
     vector<Move> myMoves;
+    int heuristic1;
+    int heuristic2;
+    int heuristic;
+    int prev_heuristic;
 
     if (opponentsMove != nullptr)
     {
@@ -88,31 +88,42 @@ Move *Player::doMove(Move *opponentsMove, int msLeft) {
         }
     }
 
-
     if (myMoves.size() != 0)
-    {
-        int x;
-        int y;
+    { 
         int save_x;
         int save_y;
-        int curr_heuristic;
-        int prev_heuristic = -500;
 
         for (int i = 0 ; i < (int) myMoves.size(); i++)
-        {
-            x = myMoves[i].getX();
-            y = myMoves[i].getY();
-            curr_heuristic = heuristic[x][y];
+            {
+                prev_heuristic = heuristic;
 
-           if (curr_heuristic > prev_heuristic)
-           {
-               prev_heuristic = curr_heuristic;
-               save_x = x;
-               save_y = y;
-           }
-        }
-          
+                int x = myMoves[i].getX();
+                int y = myMoves[i].getY();
+                heuristic1 = comp_heuristic(copy_board, x, y, p_side);
+                heuristic2 = abs_heuristic(x, y); 
+            
 
+                if (p_side == BLACK)
+                {
+                    heuristic = heuristic1 + heuristic2;
+                    if (heuristic > prev_heuristic)
+                    {
+                        save_x = x;
+                        save_y = y;
+                    }
+                } 
+                else
+                {
+                    heuristic = heuristic1 - heuristic2;
+                    if (heuristic < prev_heuristic)
+                    {
+                        save_x = x;
+                        save_y = y;
+                    }
+                }
+
+            }
+        
         Move *makeMove = new Move(save_x, save_y);
         copy_board->doMove(makeMove, p_side);
 
@@ -120,8 +131,27 @@ Move *Player::doMove(Move *opponentsMove, int msLeft) {
     }
     else
         return nullptr;
-    
+   
 }
 
 
-//asdfasfasdfadsf//
+int Player::comp_heuristic(Board *copy_board, int x, int y, Side p_side) {
+
+    int heuristic;
+       
+    Board *testBoard = copy_board->copy();
+       
+    Move *t_move = new Move(x, y);
+    testBoard->doMove(t_move, p_side);
+    heuristic = testBoard->countBlack() - testBoard->countWhite();
+
+    return heuristic;
+}
+
+int Player::abs_heuristic(int x, int y) {
+    
+    return heuristic[x][y];
+
+}
+
+        
